@@ -1,0 +1,31 @@
+# Dwa kontenery: "app" (środowisko pracy uczestnika) i "db" (SQL Server z bazą funduszy).
+# Hasła poniżej są WYŁĄCZNIE lokalnymi wartościami startowymi dla bazy z danymi
+# syntetycznymi — nigdy nie używaj ich poza tym warsztatem. Patrz README.md.
+
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm
+    command: sleep infinity
+    volumes:
+      - ..:/workspace:cached
+    environment:
+      DB_HOST: db
+      DB_PORT: "1433"
+      DB_NAME: baseFunds
+      DB_USER: workshop_reader
+      DB_PASSWORD: "Workshop!Reader1"
+      PORT: "3000"
+    depends_on:
+      - db
+
+  db:
+    build:
+      context: ..
+      dockerfile: .devcontainer/db/Dockerfile
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Workshop!Sa2024"
+      # Hasło konta read-only zakładanego po starcie (musi pasować do DB_PASSWORD w app).
+      READER_PASSWORD: "Workshop!Reader1"
+    ports:
+      - "1433:1433"

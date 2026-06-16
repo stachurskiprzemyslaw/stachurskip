@@ -1,0 +1,31 @@
+{
+  "_comment": "Przykładowy oczekiwany wynik MVP. Wartości są deterministyczne i wynikają z db/seed.sql. Użyj ich jako wyroczni w teście e2e (lab 3).",
+  "request": {
+    "fundId": "FUND-A",
+    "shareClassId": "FUND-A-ACC",
+    "valuationDate": "2025-02-10"
+  },
+  "result": {
+    "fundId": "FUND-A",
+    "fundName": "Global Equity Fund",
+    "shareClassId": "FUND-A-ACC",
+    "currency": "EUR",
+    "valuationDate": "2025-02-10",
+    "netAssetValue": 18046000.0000,
+    "unitsOutstanding": 175000.0000,
+    "navPerUnit": 103.120000,
+    "topHoldings": [
+      { "rank": 1, "instrumentId": "INSTR-003", "name": "Nordwind Energy",  "quantity": 12000, "closePrice": 66.496000, "marketValue": 797952.000000 },
+      { "rank": 2, "instrumentId": "INSTR-002", "name": "Aurora Tech",      "quantity": 8000,  "closePrice": 88.315000, "marketValue": 706520.000000 },
+      { "rank": 3, "instrumentId": "INSTR-001", "name": "Helios Industries","quantity": 5000,  "closePrice": 124.680000, "marketValue": 623400.000000 },
+      { "rank": 4, "instrumentId": "INSTR-004", "name": "Govt Bond 2030",   "quantity": 3000,  "closePrice": 101.822000, "marketValue": 305466.000000 },
+      { "rank": 5, "instrumentId": "INSTR-005", "name": "Corp Bond Helios", "quantity": 2000,  "closePrice": 104.939000, "marketValue": 209878.000000 }
+    ]
+  },
+  "derivation": {
+    "navPerUnit": "navPerUnit = netAssetValue / unitsOutstanding = 18046000 / 175000 = 103.12",
+    "unitsOutstanding": "Σ Subscription.Units − Σ Redemption.Units do 2025-02-10 = (100000 + 50000 + 25000) − 0 = 175000",
+    "closePrice": "closePrice = basePrice * (1 + 0.001 * idx), idx(2025-02-10) = 39",
+    "marketValue": "marketValue = quantity * closePrice; topHoldings posortowane malejąco, 5 największych"
+  }
+}

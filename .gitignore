@@ -1,0 +1,30 @@
+# --- Materiały prowadzącego: NIE commitować do toru uczestnika ---
+/facilitator/
+
+# --- Zależności i artefakty budowania ---
+node_modules/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# --- Środowisko i sekrety ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Logi i pliki tymczasowe ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# --- Edytory ---
+.idea/
+*.swp
+
+# UWAGA: .vscode/ celowo NIE jest ignorowane —
+# uczestnik może tu trzymać konfigurację warsztatu.
