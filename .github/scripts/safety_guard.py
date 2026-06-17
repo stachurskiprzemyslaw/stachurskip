@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""Hook runtime logic for workspace safety checks.
+
+Dlaczego sa dwa pliki:
+- `.github/hooks/fund-safety.json` jest konfiguracja hooka (kiedy i jaki command uruchomic).
+- ten plik (`safety_guard.py`) zawiera logike decyzyjna i zwraca JSON `allow|ask|deny`.
+"""
+
 from __future__ import annotations
 
 import json
@@ -12,13 +19,15 @@ DENY_PATTERNS = [
     r"git\s+checkout\s+--",
     r"rm\s+-rf\s+/",
     r"rm\s+-rf\s+\.",
+    r"\bdrop\s+database\b",
+    r"\bupdate\b(?![\s\S]*\bwhere\b)",
 ]
 
 ASK_PATTERNS = [
     r"\bdrop\s+table\b",
     r"\btruncate\b",
     r"\bdelete\s+from\b",
-    r"\bupdate\b",
+    r"\bupdate\b[\s\S]*\bwhere\b",
     r"\binsert\s+into\b",
     r"\balter\s+table\b",
     r"\bcreate\s+login\b",
