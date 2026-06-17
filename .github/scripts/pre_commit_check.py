@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Post-tool diagnostics for changed Python files.
+"""Pre-commit checks for staged Python and SQL files.
 
-Cel:
-- pokazać od razu, gdzie sa bledy w kodzie,
-- zwracac komunikaty z `plik:linia:kolumna`,
-- nie blokowac pracy, tylko powierzac diagnostyke.
+Zasada:
+- sprawdzamy tylko staged pliki,
+- pokazujemy lokalizacje bledow w formacie `plik:linia:kolumna`,
+- blokujemy commit, jesli sa problemy.
 """
 
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import sys
@@ -24,47 +23,20 @@ SQL_DENY_PATTERNS = [
 ]
 
 
-def changed_python_files() -> list[str]:
+def staged_files() -> list[str]:
     result = subprocess.run(
-        ["git", "status", "--porcelain"],
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
         cwd=ROOT,
         capture_output=True,
         text=True,
         check=True,
     )
-
-    files: list[str] = []
-    for line in result.stdout.splitlines():
-        if len(line) < 4:
-            continue
-        path = line[3:].strip()
-        if path.endswith(".py"):
-            files.append(path)
-    return sorted(set(files))
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
-def changed_sql_files() -> list[str]:
-    result = subprocess.run(
-        ["git", "status", "--porcelain"],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-
-    files: list[str] = []
-    for line in result.stdout.splitlines():
-        if len(line) < 4:
-            continue
-        path = line[3:].strip()
-        if path.endswith(".sql"):
-            files.append(path)
-    return sorted(set(files))
-
-
-def run_ruff(paths: list[str]) -> tuple[int, str]:
+def run_ruff(paths: list[str]) -> list[str]:
     if not paths:
-        return 0, ""
+        return []
 
     result = subprocess.run(
         ["python3", "-m", "ruff", "check", *paths],
@@ -73,7 +45,9 @@ def run_ruff(paths: list[str]) -> tuple[int, str]:
         text=True,
     )
     output = (result.stdout + result.stderr).strip()
-    return result.returncode, output
+    if result.returncode == 0:
+        return []
+    return ["Bledy kodu wykryte przez ruff:\n" + output]
 
 
 def run_sql_checks(paths: list[str]) -> list[str]:
@@ -101,30 +75,17 @@ def run_sql_checks(paths: list[str]) -> list[str]:
 
 
 def main() -> int:
-    raw_input = sys.stdin.read().strip()
-    if not raw_input:
-        return 0
-
-    try:
-        json.loads(raw_input)
-    except json.JSONDecodeError:
-        return 0
-
-    paths = changed_python_files()
-    sql_paths = changed_sql_files()
+    files = staged_files()
+    python_files = [path for path in files if path.endswith(".py")]
+    sql_files = [path for path in files if path.endswith(".sql")]
 
     messages: list[str] = []
-
-    if paths:
-        code, output = run_ruff(paths)
-        if code != 0 and output:
-            messages.append("Bledy kodu wykryte przez ruff:\n" + output)
-
-    if sql_paths:
-        messages.extend(run_sql_checks(sql_paths))
+    messages.extend(run_ruff(python_files))
+    messages.extend(run_sql_checks(sql_files))
 
     if messages:
-        print(json.dumps({"systemMessage": "\n".join(messages)}))
+        print("\n".join(messages), file=sys.stderr)
+        return 1
 
     return 0
 
