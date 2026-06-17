@@ -90,3 +90,12 @@ def test_nav_endpoint_happy_path_matches_expected_values() -> None:
         assert payload["topHoldings"][0]["marketValue"] >= payload["topHoldings"][1]["marketValue"]
     finally:
         app.dependency_overrides.clear()
+
+
+def test_root_returns_mock_page() -> None:
+    client = TestClient(app)
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Podglad NAV i najwiekszych pozycji funduszu." in response.text

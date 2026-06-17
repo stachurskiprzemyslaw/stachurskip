@@ -1,19 +1,27 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path as FilePath
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query
+from fastapi.responses import FileResponse
 
 from app.config import settings
 from app.repository import FundRepository
 from app.service import FundService, NotFoundError
 
 app = FastAPI(title="Funds NAV API", version="0.1.0")
+MOCK_PAGE_PATH = FilePath(__file__).with_name("static").joinpath("mock.html")
 
 
 def get_service() -> FundService:
     repository = FundRepository(connection_string=settings.odbc_connection_string)
     return FundService(repository=repository)
+
+
+@app.get("/")
+def mock_page() -> FileResponse:
+    return FileResponse(MOCK_PAGE_PATH)
 
 
 @app.get("/health")

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fund NAV Preview</title>
+    <style>
+      :root {
+        --paper: #f5efe4;
+        --ink: #13212f;
+        --muted: #5a6872;
+        --accent: #0f766e;
+        --accent-soft: #c7ede7;
+        --card: rgba(255, 252, 245, 0.88);
+        --line: rgba(19, 33, 47, 0.12);
+        --shadow: 0 24px 80px rgba(19, 33, 47, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28%),
+          radial-gradient(circle at right 20%, rgba(186, 146, 63, 0.18), transparent 24%),
+          linear-gradient(180deg, #f8f4ea 0%, var(--paper) 100%);
+      }
+
+      .shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: start;
+      }
+
+      .hero-copy {
+        padding: 24px 4px 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 20px 0 12px;
+        font-size: clamp(42px, 7vw, 78px);
+        line-height: 0.94;
+        letter-spacing: -0.04em;
+      }
+
+      .lead {
+        max-width: 58ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .query-card,
+      .overview,
+      .table-card,
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .query-card {
+        padding: 22px;
+      }
+
+      .query-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        font: inherit;
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .button-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 18px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--ink);
+        color: white;
+      }
+
+      .secondary {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .content-grid {
+        display: grid;
+        gap: 18px;
+        margin-top: 28px;
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+
+      .overview {
+        padding: 26px;
+      }
+
+      .overview-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .title-block h2,
+      .table-head h3,
+      .aside-head h3 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .meta {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .pill {
+        display: inline-flex;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .stats {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 22px;
+      }
+
+      .mini-card {
+        padding: 18px;
+      }
+
+      .mini-card .label {
+        color: var(--muted);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .mini-card .value {
+        margin-top: 10px;
+        font-size: clamp(24px, 3vw, 36px);
+        letter-spacing: -0.04em;
+      }
+
+      .mini-card .sub {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .aside-stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .table-card,
+      .mini-card.note {
+        padding: 24px;
+      }
+
+      .table-head,
+      .aside-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+
+      th,
+      td {
+        padding: 14px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .rank {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(15, 118, 110, 0.12);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .allocation-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .allocation-item {
+        display: grid;
+        gap: 8px;
+      }
+
+      .allocation-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 15px;
+      }
+
+      .bar {
+        overflow: hidden;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(19, 33, 47, 0.08);
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #0f766e, #3ba99c);
+      }
+
+      .note p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .content-grid,
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Mock widoku MVP</div>
+          <h1>Podglad NAV i najwiekszych pozycji funduszu.</h1>
+          <p class="lead">
+            To jest szkic strony pod wewnetrzne narzedzie operacyjne. Dane ponizej sa mockiem opartym
+            o probke FUND-A z warsztatu, zeby ocenic uklad, hierarchie informacji i czytelnosc.
+          </p>
+        </div>
+
+        <aside class="query-card">
+          <div class="query-grid">
+            <label>
+              Fundusz
+              <select>
+                <option>FUND-A · Global Equity Fund</option>
+                <option>FUND-B · Balanced Opportunities</option>
+                <option>FUND-C · Income Select</option>
+              </select>
+            </label>
+            <label>
+              Klasa jednostek
+              <select>
+                <option>FUND-A-ACC</option>
+                <option>FUND-A-DIST</option>
+              </select>
+            </label>
+            <label>
+              Data wyceny
+              <input type="date" value="2025-02-10" />
+            </label>
+          </div>
+          <div class="button-row">
+            <button class="primary" type="button">Pokaz wynik</button>
+            <button class="secondary" type="button">Zmien probe</button>
+          </div>
+        </aside>
+      </section>
+
+      <section class="content-grid">
+        <section class="overview">
+          <div class="overview-head">
+            <div class="title-block">
+              <span class="pill">FUND-A-ACC · EUR</span>
+              <h2>Global Equity Fund</h2>
+              <div class="meta">Wycena na 2025-02-10 · read-only preview</div>
+            </div>
+            <div class="subtle">NavPerUnit skalkulowany i zapisany w bazie, ale pokazujemy go jako wynik biznesowy.</div>
+          </div>
+
+          <div class="stats">
+            <article class="mini-card">
+              <div class="label">Nav per Unit</div>
+              <div class="value">103.12</div>
+              <div class="sub">EUR na jednostke</div>
+            </article>
+            <article class="mini-card">
+              <div class="label">Net Asset Value</div>
+              <div class="value">18.046M</div>
+              <div class="sub">Laczna wartosc klasy</div>
+            </article>
+            <article class="mini-card">
+              <div class="label">Units Outstanding</div>
+              <div class="value">175k</div>
+              <div class="sub">Subskrypcje minus umorzenia</div>
+            </article>
+          </div>
+
+          <section class="table-card" style="margin-top: 18px; box-shadow: none; background: rgba(255,255,255,0.6);">
+            <div class="table-head">
+              <h3>Top 5 holdings</h3>
+              <span class="subtle">Sortowanie malejaco po market value</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Instrument</th>
+                  <th>Quantity</th>
+                  <th>Close Price</th>
+                  <th>Market Value</th>
+                </tr>
+              </thead>
+              <tbody id="holdings-body"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <aside class="aside-stack">
+          <section class="mini-card note">
+            <div class="aside-head">
+              <h3>Snapshot</h3>
+              <span class="subtle">Mock danych</span>
+            </div>
+            <p>
+              Widok pokazuje najpierw 3 liczby decyzyjne, a dopiero potem szczegoly pozycji. To jest bardziej
+              przydatne dla operacji niz klasyczny dashboard z wieloma wykresami.
+            </p>
+          </section>
+
+          <section class="table-card">
+            <div class="aside-head">
+              <h3>Contribution mix</h3>
+              <span class="subtle">Udzial 5 pozycji</span>
+            </div>
+            <div class="allocation-list" id="allocation-list"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const mockData = {
+        fundId: "FUND-A",
+        fundName: "Global Equity Fund",
+        shareClassId: "FUND-A-ACC",
+        currency: "EUR",
+        valuationDate: "2025-02-10",
+        navPerUnit: 103.12,
+        netAssetValue: 18046000,
+        unitsOutstanding: 175000,
+        topHoldings: [
+          { rank: 1, instrumentId: "INSTR-003", name: "Nordwind Energy", quantity: 12000, closePrice: 66.496, marketValue: 797952 },
+          { rank: 2, instrumentId: "INSTR-002", name: "Aurora Tech", quantity: 8000, closePrice: 88.315, marketValue: 706520 },
+          { rank: 3, instrumentId: "INSTR-001", name: "Helios Industries", quantity: 5000, closePrice: 124.68, marketValue: 623400 },
+          { rank: 4, instrumentId: "INSTR-004", name: "Govt Bond 2030", quantity: 3000, closePrice: 101.822, marketValue: 305466 },
+          { rank: 5, instrumentId: "INSTR-005", name: "Corp Bond Helios", quantity: 2000, closePrice: 104.939, marketValue: 209878 },
+        ],
+      };
+
+      const euro = new Intl.NumberFormat("pl-PL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+      const number = new Intl.NumberFormat("pl-PL");
+      const percent = new Intl.NumberFormat("pl-PL", { style: "percent", maximumFractionDigits: 1 });
+
+      const totalTopValue = mockData.topHoldings.reduce((sum, item) => sum + item.marketValue, 0);
+      const body = document.getElementById("holdings-body");
+      const allocation = document.getElementById("allocation-list");
+
+      mockData.topHoldings.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><div class="rank">${item.rank}</div></td>
+          <td>
+            <strong>${item.name}</strong><br />
+            <span class="subtle">${item.instrumentId}</span>
+          </td>
+          <td>${number.format(item.quantity)}</td>
+          <td>${item.closePrice.toFixed(3)}</td>
+          <td>${euro.format(item.marketValue)}</td>
+        `;
+        body.appendChild(row);
+
+        const share = item.marketValue / totalTopValue;
+        const block = document.createElement("div");
+        block.className = "allocation-item";
+        block.innerHTML = `
+          <div class="allocation-top">
+            <span>${item.name}</span>
+            <span>${percent.format(share)}</span>
+          </div>
+          <div class="bar"><span style="width:${(share * 100).toFixed(1)}%"></span></div>
+        `;
+        allocation.appendChild(block);
+      });
+    </script>
+  </body>
+</html>
