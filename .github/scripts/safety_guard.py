@@ -36,6 +36,8 @@ ASK_PATTERNS = [
     r"DB_PASSWORD",
 ]
 
+SCAN_KEYS = {"command", "input", "sql", "query"}
+
 
 def flatten_strings(value: Any) -> list[str]:
     if isinstance(value, str):
@@ -49,6 +51,25 @@ def flatten_strings(value: Any) -> list[str]:
         collected = []
         for item in value:
             collected.extend(flatten_strings(item))
+        return collected
+    return []
+
+
+def collect_relevant_text(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        collected: list[str] = []
+        for item in value:
+            collected.extend(collect_relevant_text(item))
+        return collected
+    if isinstance(value, dict):
+        collected: list[str] = []
+        for key, item in value.items():
+            if key in SCAN_KEYS:
+                collected.extend(flatten_strings(item))
+            elif isinstance(item, (dict, list)):
+                collected.extend(collect_relevant_text(item))
         return collected
     return []
 
@@ -72,9 +93,17 @@ def main() -> int:
     try:
         payload = json.loads(raw_input)
     except json.JSONDecodeError:
+        print(
+            json.dumps(
+                decision_response(
+                    "deny",
+                    "Zablokowano przez workspace safety hook: niepoprawny format danych hooka.",
+                )
+            )
+        )
         return 0
 
-    searchable = "\n".join(flatten_strings(payload))
+    searchable = "\n".join(collect_relevant_text(payload))
 
     for pattern in DENY_PATTERNS:
         if re.search(pattern, searchable, flags=re.IGNORECASE):

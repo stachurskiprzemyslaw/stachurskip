@@ -6,6 +6,13 @@
         "command": "python3 .github/scripts/safety_guard.py",
         "timeout": 10
       }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "python3 .github/scripts/code_diagnostics.py",
+        "timeout": 10
+      }
     ]
   }
 }

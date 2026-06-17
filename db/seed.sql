@@ -226,5 +226,4 @@ WHERE v.ShareClassId = 'FUND-A-ACC'
 ORDER BY v.ValuationDate;
 GO
 
-drop database baseFunds;
-go  
+
