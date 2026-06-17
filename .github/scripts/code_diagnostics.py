@@ -24,6 +24,33 @@ SQL_DENY_PATTERNS = [
 ]
 
 
+def detect_ruff_command() -> list[str] | None:
+    candidates: list[list[str]] = []
+
+    venv_python = ROOT / ".venv" / "bin" / "python"
+    if venv_python.exists():
+        candidates.append([str(venv_python), "-m", "ruff"])
+
+    candidates.append(["python3", "-m", "ruff"])
+    candidates.append(["ruff"])
+
+    for candidate in candidates:
+        try:
+            probe = subprocess.run(
+                [*candidate, "--version"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+        except OSError:
+            continue
+
+        if probe.returncode == 0:
+            return candidate
+
+    return None
+
+
 def changed_python_files() -> list[str]:
     result = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -66,8 +93,12 @@ def run_ruff(paths: list[str]) -> tuple[int, str]:
     if not paths:
         return 0, ""
 
+    ruff_cmd = detect_ruff_command()
+    if ruff_cmd is None:
+        return 1, "Nie znaleziono narzedzia ruff. Zainstaluj zaleznosci projektu (np. .venv + pip install -r requirements.txt)."
+
     result = subprocess.run(
-        ["python3", "-m", "ruff", "check", *paths],
+        [*ruff_cmd, "check", *paths],
         cwd=ROOT,
         capture_output=True,
         text=True,

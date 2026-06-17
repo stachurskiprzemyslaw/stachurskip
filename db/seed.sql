@@ -227,6 +227,3 @@ ORDER BY v.ValuationDate;
 GO
 
 
-delete from dbo.FeeAccrual;
-
-GO
